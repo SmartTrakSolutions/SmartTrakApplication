@@ -1,12 +1,16 @@
 package com.example.ashton.smarttrak;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
+import android.telephony.SmsManager;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -30,12 +34,7 @@ import com.microsoft.band.sensors.BandSkinTemperatureEventListener;
 import com.microsoft.band.sensors.HeartRateConsentListener;
 import com.microsoft.band.sensors.SampleRate;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,12 +52,22 @@ public class LandingPage extends AppCompatActivity {
     int accIndex = 0;
     int hrIndex = 0;
     int stIndex = 0;
+    String panicMsg = "Holy fucking shit help!!!!";
+    String phoneNumber = "7789947262";
+    boolean emergency = false;
+    boolean quitEmergencyTask = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_landing_page);
         setTitle("SmartTrak Landing Page");
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.SEND_SMS}, 1);
+
+        // TEST
+        emergency = true;
+
+        new EmergencyTask().execute();
 
 
         Button buttonActivate = (Button) findViewById(R.id.button_activate);
@@ -163,6 +172,45 @@ public class LandingPage extends AppCompatActivity {
 
             }
         });
+
+        Button buttonPanic = (Button) findViewById(R.id.button_panic);
+        buttonPanic.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sendSMS(phoneNumber, panicMsg);
+            }
+        });
+    }
+
+    private class EmergencyTask extends AsyncTask<Void, Void, Void>{
+        @Override
+        protected Void doInBackground(Void... params){
+            
+
+            while (!quitEmergencyTask){
+                // implement emergency detection here
+
+                if (emergency){
+                   emergency = false;
+                   quitEmergencyTask = true;
+                }
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void result){
+            String emergencyMsg = "";
+
+            // TEST VALUE
+            emergencyMsg = "hello i am dying";
+
+            sendSMS(phoneNumber, emergencyMsg);
+            quitEmergencyTask = false;
+            new EmergencyTask().execute();
+        }
+
     }
 
     // async runs on background thread
@@ -314,6 +362,23 @@ public class LandingPage extends AppCompatActivity {
         return file;
     }
 
+    private void sendSMS(String phoneNumber, String message){
+        int permission = ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS);
+        if (permission == PackageManager.PERMISSION_GRANTED){
+            SmsManager sms = SmsManager.getDefault();
+            sms.sendTextMessage(phoneNumber, null, message, null, null);
+
+            Context context = getApplicationContext();
+            String toast_text = "Emergency message sent.";
+            int duration = Toast.LENGTH_SHORT;
+            Toast toast = Toast.makeText(context, toast_text, duration);
+            toast.show();
+        } else {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.SEND_SMS}, 1);
+            sendSMS(phoneNumber, message);
+        }
+
+    }
 
 
 }
