@@ -52,4 +52,12 @@
         android:layout_alignEnd="@+id/button_sample"
         android:layout_toEndOf="@+id/button_activate"
         android:layout_alignParentBottom="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Panic"
+        android:id="@+id/button_panic"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true" />
 </RelativeLayout>
